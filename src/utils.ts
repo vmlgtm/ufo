@@ -272,6 +272,11 @@ export function cleanDoubleSlashes(input = ""): string {
     .join("://");
 }
 
+function isPathBoundary(input: string, baseLength: number): boolean {
+  const next = input[baseLength];
+  return next === undefined || next === "/" || next === "?";
+}
+
 /**
  * Ensures the URL or pathname starts with base.
  *
@@ -292,7 +297,7 @@ export function withBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (input.startsWith(_base)) {
+  if (input.startsWith(_base) && isPathBoundary(input, _base.length)) {
     return input;
   }
   return joinURL(_base, input);
@@ -316,7 +321,7 @@ export function withoutBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (!input.startsWith(_base)) {
+  if (!input.startsWith(_base) || !isPathBoundary(input, _base.length)) {
     return input;
   }
   const trimmed = input.slice(_base.length);
