@@ -292,7 +292,7 @@ export function withBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (input.startsWith(_base)) {
+  if (input.startsWith(_base) && isPathBoundary(input, _base)) {
     return input;
   }
   return joinURL(_base, input);
@@ -316,11 +316,24 @@ export function withoutBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (!input.startsWith(_base)) {
+  if (!input.startsWith(_base) || !isPathBoundary(input, _base)) {
     return input;
   }
   const trimmed = input.slice(_base.length);
   return trimmed[0] === "/" ? trimmed : "/" + trimmed;
+}
+
+/**
+ * Checks whether `input` matches `base` as a full path segment boundary,
+ * rather than a mere string prefix. A match is only valid when the character
+ * immediately following `base` is empty (end of string), `/`, or `?`. This
+ * prevents false positives such as `"/admin-dashboard"` matching base `"/admin"`.
+ *
+ * Only call this after confirming `input.startsWith(base)`.
+ */
+function isPathBoundary(input: string, base: string): boolean {
+  const nextChar = input[base.length];
+  return nextChar === undefined || nextChar === "/" || nextChar === "?";
 }
 
 /**
