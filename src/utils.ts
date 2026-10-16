@@ -273,6 +273,21 @@ export function cleanDoubleSlashes(input = ""): string {
 }
 
 /**
+ * Checks if the input starts with the base followed by a path boundary
+ * (`/`, `?`) or the end of the string.
+ *
+ * This prevents false positives for similar paths such as
+ * `/admin-dashboard` being treated as a sub-path of `/admin`.
+ */
+function hasBasePrefix(input: string, _base: string): boolean {
+  if (!input.startsWith(_base)) {
+    return false;
+  }
+  const next = input[_base.length];
+  return next === undefined || next === "/" || next === "?";
+}
+
+/**
  * Ensures the URL or pathname starts with base.
  *
  * If input already starts with base, it will not be added again.
@@ -292,7 +307,7 @@ export function withBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (input.startsWith(_base)) {
+  if (hasBasePrefix(input, _base)) {
     return input;
   }
   return joinURL(_base, input);
@@ -316,7 +331,7 @@ export function withoutBase(input: string, base: string) {
     return input;
   }
   const _base = withoutTrailingSlash(base);
-  if (!input.startsWith(_base)) {
+  if (!hasBasePrefix(input, _base)) {
     return input;
   }
   const trimmed = input.slice(_base.length);
